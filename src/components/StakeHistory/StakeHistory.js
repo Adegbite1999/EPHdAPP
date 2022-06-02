@@ -1,11 +1,11 @@
-import React, { useState } from 'react'
+import React from 'react'
 import Styles from './StakeHistory.module.css';
 import clsx from 'clsx';
 import {utils} from "ethers";
 import { addressShortner, formatDate } from '../../utils/helpers';
 
 
-const StakeHistory = ({stakeHistory, withdrawHistory}) => {
+const StakeHistory = ({stakeData}) => {
 
   return (
     // <div className={Styles.wrapper}> 
@@ -24,28 +24,25 @@ const StakeHistory = ({stakeHistory, withdrawHistory}) => {
           </thead>
           <tbody>
               
-                <tr className={clsx()}>
-                    <td className= {Styles.table_data}>
-                      {/* {index + 1} */} 1
-                    </td>
-                    <td className= {Styles.table_data}>
-                    1000
-                      {/* {Number(utils.formatUnits(item.amount, 18)).toFixed(4)} */}
-                    </td>
-                    <td className= {Styles.table_data}>
-                      0xad...cdex
-                      {/* {addressShortner(item.account, false)} */}
-                    </td>
-                    <td className= {Styles.table_data}>
-                      {/* {item.type} */}
-                      Withdraw
-                    </td>
-                    <td className= {Styles.table_data}>
-                      {/* {formatDate(item.time)} */}
-                      May 31,2022
-                    </td>
-                  </tr>
-              
+          {stakeData.map((item, index) => {
+              return <tr key={index} className={clsx({[Styles.table_row]: true, [Styles.unstake_style]: item.type === "withdraw", [Styles.stake_style]: item.type === "stake"})}>
+                <td className= {Styles.table_data}>
+                  {index + 1}
+                </td>
+                <td className= {Styles.table_data}>
+                  {Number(utils.formatUnits(item.amount, 18)).toFixed(4)}
+                </td>
+                <td className= {Styles.table_data}>
+                  {addressShortner(item.account, false)}
+                </td>
+                <td className= {Styles.table_data}>
+                  {item.type}
+                </td>
+                <td className= {Styles.table_data}>
+                  {formatDate(item.time)}
+                </td>
+              </tr>
+            })}
               
           </tbody>
       

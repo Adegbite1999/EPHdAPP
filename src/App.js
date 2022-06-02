@@ -23,6 +23,9 @@ const [loading, setLoading] = useState(false)
 const [connected,setConnected] = useState(false)
 const [stakeInput, setStakeInput] = useState("")
 const [withdrawInput,setWithdrawInput] = useState("")
+const [stakeAmount, setStakeAmount] = useState(0)
+const [reward, setReward] = useState(0)
+const [stakeHistory, setStakeHistory] = useState([])
 
   const [userInfo, setUserInfo] = useState({
     matic_balance: 0,
@@ -137,15 +140,15 @@ if(Number(networkId) !== 80001) toast.error("please connect to mumbai network")
 }
 
 useEffect(() => {
-  // init()
+  init()
   // withdraw()
   if(!window.ethereum) return;
   // binding handlers to wallet events we care about
   window.ethereum.on("connect", eagerConnect)
   window.ethereum.on("accountsChanged", handleAccountChanged)
   window.ethereum.on('chainChanged', handleChainChanged);
-  // getStakeAmount()
-  // getStakeReward()
+  getStakeAmount()
+  getStakeReward()
   
 },
 // eslint-disable-next-line
@@ -221,12 +224,65 @@ const withdrawHandler = async(e) =>{
     setWithdrawInput("")
     setLoading(false)
  } catch (error) {
-  //  toast.error(error)
   toast.error(error.error.message)
    setLoading(false)
  }
 }
 
+// getStakeAmount
+const getStakeAmount  = async( ) => {
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner()
+  const EPHContractInstance = await new Contract(contractAddress,abi,signer)
+  const stake = await EPHContractInstance.getBalance()
+  const formatunit = utils.formatUnits(stake,18)
+  setStakeAmount(formatunit)
+}
+
+const getStakeReward  = async( ) => {
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner()
+  const EPHContractInstance = await new Contract(contractAddress,abi,signer)
+  const accounts = await provider.listAccounts();
+  const address = await accounts[0]
+  const stake = await EPHContractInstance.calculateReward(address)
+  const formatunit = utils.formatUnits(stake,18)
+  const parseAmount = parseInt(formatunit).toFixed(0)
+  setReward(parseAmount)
+}
+const init = async () => {
+  const customProvider = new ethers.providers.JsonRpcProvider(process.env.REACT_APP_RPC_URL)
+  const BRTContractInstance = new Contract(contractAddress, abi, customProvider);
+  const stakeHistory = await BRTContractInstance.queryFilter("stakeEvent");
+
+  const history = [];
+
+  
+  
+  stakeHistory.forEach(data => {
+    history.unshift({
+      amount: data.args[1],
+      account: data.args[0],
+      time: data.args[2].toString(),
+      type: data.args[3],
+    })
+  })
+
+
+  setStakeHistory(history);
+
+  BRTContractInstance.on("stakeEvent", (account, amount, time, type) => {
+    const newStake = {
+      amount: amount,
+      account: account,
+      time: time.toString(),
+      type: type,
+    }
+
+    setStakeHistory(prev => [newStake, ...prev]);
+  })
+
+}
 
   return (
     <div className="App">
@@ -247,10 +303,13 @@ const withdrawHandler = async(e) =>{
         onChangeInputHandler={onChangeInputHandler}
         withdrawInput={withdrawInput}
         withdrawHandler={withdrawHandler}
+        stakeAmount={stakeAmount}
+        reward={reward}
 
 
         />
         <StakeHistory
+        stakeData={stakeHistory}
         />
       </main>
 }
