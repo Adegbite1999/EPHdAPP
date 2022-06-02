@@ -21,6 +21,8 @@ function App() {
   //a flag to check status of user
 const [loading, setLoading] = useState(false)
 const [connected,setConnected] = useState(false)
+const [stakeInput, setStakeInput] = useState("")
+const [withdrawInput,setWithdrawInput] = useState("")
 
   const [userInfo, setUserInfo] = useState({
     matic_balance: 0,
@@ -37,7 +39,7 @@ const [connected,setConnected] = useState(false)
   
         setUserInfo({
           matic_balance: accountDetails.userMaticBal,
-          token_balance: accountDetails.userBRTBalance,
+          token_balance: accountDetails.userEPHBalance,
           address: accounts[0]
         })
         setConnected(true)
@@ -70,7 +72,7 @@ const [connected,setConnected] = useState(false)
       const accountDetails = await getAccountDetails(accounts[0])
         setUserInfo({
           matic_balance: accountDetails.userMaticBal,
-          token_balance: accountDetails.userBRTBalance,
+          token_balance: accountDetails.userEPHBalance,
           address: accounts[0]
         })
         setConnected(true)
@@ -83,9 +85,9 @@ const getAccountDetails = async (address) => {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const userMaticBal = await provider.getBalance(address);
     const TokenContractInstance = new Contract(contractAddress, abi, provider);
-    const userBRTBalance = await TokenContractInstance.balanceOf(address)
+    const userEPHBalance = await TokenContractInstance.balanceOf(address)
     setLoading(false)
-    return {userBRTBalance, userMaticBal}
+    return {userEPHBalance, userMaticBal}
   }catch(err) {
     console.log(err)
   }
@@ -124,7 +126,7 @@ const eagerConnect = async () =>{
   const accountDetails = await getAccountDetails(accounts[0])
   setUserInfo({
     matic_balance:accountDetails.userMaticBal,
-    token_balance:accountDetails.userBRTBalance,
+    token_balance:accountDetails.userEPHBalance,
     address: accounts[0]
   })
 setConnected(true)
@@ -144,26 +146,86 @@ useEffect(() => {
   window.ethereum.on('chainChanged', handleChainChanged);
   // getStakeAmount()
   // getStakeReward()
+  
 },
 // eslint-disable-next-line
 [connectWallet])
 
 
-// const onChangeInputHandler = ({target}) =>{
-//   switch (target.id) {
-//     case "stake":
-//       setStakeInput(target.value)
-//       break;
-//       case "withdraw":
-//         setWithdrawInput(target.value)
-//         break;
-//         case "address":
-//           setAddressInput(target.value)
-//           break;
-//     default:
-//       break;
-//   }
-// } 
+const onChangeInputHandler = ({target}) =>{
+  switch (target.id) {
+    case "stake":
+      setStakeInput(target.value)
+      break;
+      case "withdraw":
+        setWithdrawInput(target.value)
+        break;
+        case "address":
+          // setAddressInput(target.value)
+          break;
+    default:
+      break;
+  }
+} 
+
+const stakeHandler = async(e) =>{
+  e.preventDefault()
+  if(stakeInput ==="") toast("Input field cannot be empty")
+  setLoading(true)
+ try {
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer =provider.getSigner()
+  const TokenContractInstance = new Contract(contractAddress,abi,signer)
+  const weiValue = utils.parseEther(stakeInput)
+  await TokenContractInstance.stakeToken(weiValue)
+
+  const accounts = await provider.listAccounts();
+  if(!accounts.length) return
+  const accountDetails = await getAccountDetails(accounts[0])
+    setUserInfo({
+      matic_balance: accountDetails.userMaticBal,
+      token_balance: accountDetails.userEPHBalance,
+      address: accounts[0]
+    })
+    setConnected(true)
+    toast.success(`You've successfully staked ${weiValue}` )
+    setStakeInput("")
+    setLoading(false)
+ } catch (error) {
+   toast.error(error)
+ }
+}
+
+const withdrawHandler = async(e) =>{
+  e.preventDefault()
+  if(withdrawInput ==="") toast("Input field cannot be empty")
+  // if(withdrawInput < 0) toast("You cannot withdraw less than 0 BRT")
+  setLoading(true)
+ try {
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer =provider.getSigner()
+  const BRTContractInstance = new Contract(contractAddress,abi,signer)
+  const weiValue = utils.parseEther(withdrawInput)
+  await BRTContractInstance.withdraw(weiValue)
+
+  const accounts = await provider.listAccounts();
+  if(!accounts.length) return
+  const accountDetails = await getAccountDetails(accounts[0])
+    setUserInfo({
+      matic_balance: accountDetails.userMaticBal,
+      token_balance: accountDetails.userEPHBalance,
+      address: accounts[0]
+    })
+    setConnected(true)
+    toast.success(`You've successfully withdraw ${weiValue}` )
+    setWithdrawInput("")
+    setLoading(false)
+ } catch (error) {
+  //  toast.error(error)
+  toast.error(error.error.message)
+   setLoading(false)
+ }
+}
 
 
   return (
@@ -180,6 +242,13 @@ useEffect(() => {
       
       <main className='main'>
         <MyStake
+        stakeHandler={stakeHandler}
+        stakeInput={stakeInput}
+        onChangeInputHandler={onChangeInputHandler}
+        withdrawInput={withdrawInput}
+        withdrawHandler={withdrawHandler}
+
+
         />
         <StakeHistory
         />

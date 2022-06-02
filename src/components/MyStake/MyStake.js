@@ -4,7 +4,7 @@ import Modal from "../Modal/Modal";
 import Card from "./Card/Card";
 import Styles from "./MyStake.module.css";
 
-const MyStake = () => {
+const MyStake = ({stakeInput,stakeHandler,onChangeInputHandler,withdrawInput,withdrawHandler}) => {
   const [show, setShow] = useState(false);
   const modalHandler = () => {
     setShow(!show);
@@ -29,10 +29,12 @@ const MyStake = () => {
             <Card cardKey="Total Staked" cardValue={`--:--`} />
             <Card cardKey="Net Profit" cardValue={`--:--`} />
           </div>
-          <form className={Styles.form}>
+          <form onSubmit={stakeHandler} className={Styles.form}>
             <input
               type="number"
               placeholder="Amount to stake"
+              value={stakeInput}
+              onChange={onChangeInputHandler}
               className={Styles.input}
               id="stake"
             />
@@ -48,12 +50,14 @@ const MyStake = () => {
             </button>
           </form>
 
-          <form className={Styles.form}>
+          <form onSubmit={withdrawHandler} className={Styles.form}>
             <input
               type="number"
               placeholder="Amount to withdraw"
               className={Styles.input}
               id="withdraw"
+              value={withdrawInput}
+              onChange={onChangeInputHandler}
             />
             <button
               type="submit"
