@@ -4,7 +4,7 @@ import Modal from "../Modal/Modal";
 import Card from "./Card/Card";
 import Styles from "./MyStake.module.css";
 
-const MyStake = ({stakeInput,stakeHandler,onChangeInputHandler,withdrawInput,withdrawHandler}) => {
+const MyStake = ({stakeInput,stakeHandler,onChangeInputHandler,reward,stakeAmount,withdrawInput,withdrawHandler}) => {
   const [show, setShow] = useState(false);
   const modalHandler = () => {
     setShow(!show);
@@ -18,7 +18,7 @@ const MyStake = ({stakeInput,stakeHandler,onChangeInputHandler,withdrawInput,wit
         <div>
       <h2 className={Styles.heading}>Dashboard</h2>
       </div>
-      <div onClick={modalHandler} className={Styles.inputBox}>
+      <div  className={Styles.inputBox}>
         <input className={Styles.searchBox} disabled={true} type="text" placeholder="search stakers"/>
         <span className={Styles.icon}><img src="/lens.svg" alt='search-icon'/></span>
       </div>
@@ -26,8 +26,8 @@ const MyStake = ({stakeInput,stakeHandler,onChangeInputHandler,withdrawInput,wit
       <div>
         <div className={Styles.stake_body}>
           <div className={Styles.card_container}>
-            <Card cardKey="Total Staked" cardValue={`--:--`} />
-            <Card cardKey="Net Profit" cardValue={`--:--`} />
+            <Card cardKey="Total Staked" cardValue={stakeAmount} />
+            <Card cardKey="Net Profit" cardValue={reward} />
           </div>
           <form onSubmit={stakeHandler} className={Styles.form}>
             <input
