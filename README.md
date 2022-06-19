@@ -1,2 +1,3 @@
-# Getting Started with Create React App
+# A simple staking Dapp
+# https://eph-d-app.vercel.app/
 
